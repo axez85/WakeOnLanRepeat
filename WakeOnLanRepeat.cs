@@ -2,26 +2,33 @@
 using EasyWakeOnLan;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text;
+using System.IO;
 
 namespace WakeOnLanRepeat
 {
     class WakeOnLanRepeat
     {
         private static Timer timer;
+        private static StringBuilder stringBuild = new StringBuilder();
 
         static void Main(string[] args)
         {
-            RepeatEveryMinutes(10);
-         
+            RepeatEveryMinutes(1);
+        
         }
 
         static void RepeatEveryMinutes(int minutes)
         {
             var timerState = new TimerState { Counter = 0 };
-            minutes = minutes * 60 * 1000; 
+            var logPath = "runtime-log.txt";
+            minutes = minutes * 60 * 1000;
 
+            if (File.Exists(logPath))
+                File.Create(logPath).Close();
+                
             timer = new Timer(
-                callback: new TimerCallback(TimerTask),
+                callback: new TimerCallback(WakeOnLan),
                 state: timerState,
                 dueTime: 1000,
                 period: minutes);
@@ -32,32 +39,27 @@ namespace WakeOnLanRepeat
             }
 
             timer.Dispose();
-            Console.WriteLine($"{DateTime.Now:yyyy-MM-d HH:mm:ss}: done.");
+            stringBuild.Append($"{DateTime.Now:yyyy-MM-d HH:mm:ss}: done.");
+            File.AppendAllText(logPath, stringBuild.ToString());
+            stringBuild.Clear();
         }
 
-        private static void TimerTask(object timerState)
+        private static async void WakeOnLan(object timerState)
         {
-            Console.WriteLine($"{DateTime.Now:yyyy-MM-d HH:mm:ss}: starting a new callback.");
+            string Mac = ""; //Mac-adress
+
+            stringBuild.Append($"{DateTime.Now:yyyy-MM-d HH:mm:ss}: sending command to server.\n");
+
             var state = timerState as TimerState;
             Interlocked.Increment(ref state.Counter);
+
+            EasyWakeOnLanClient WOLClient = new EasyWakeOnLanClient();
+            await WOLClient.WakeAsync(Mac);
         }
 
         class TimerState
         {
             public int Counter;
-        }
-
-
-        static void test()
-        {
-            Console.WriteLine("Running... " + DateTime.Now);
-        }
-
-        static async void WakeOnLan()
-        {
-            string Mac = "1C:1B:0D:95:F2:67";
-            EasyWakeOnLanClient WOLClient = new EasyWakeOnLanClient();
-            await WOLClient.WakeAsync(Mac);
         }
 
     }
