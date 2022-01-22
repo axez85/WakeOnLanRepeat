@@ -1,8 +1,12 @@
 /dist/
 /node_modules/
+/.vscode/
+/obj/
+/bin/
 *.sublime-project
 *.sublime-workspace
 *.sublime-grunt.cache
 *.code-workspace
 *package-lock.json
 #projects
+last-run-log.txt
