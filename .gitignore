@@ -9,4 +9,4 @@
 *.code-workspace
 *package-lock.json
 #projects
-runtime-log.txt
+last-run-log.txt

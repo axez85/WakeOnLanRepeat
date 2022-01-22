@@ -15,17 +15,15 @@ namespace WakeOnLanRepeat
         static void Main(string[] args)
         {
             RepeatEveryMinutes(1);
-        
+            
         }
 
         static void RepeatEveryMinutes(int minutes)
         {
             var timerState = new TimerState { Counter = 0 };
-            var logPath = "runtime-log.txt";
             minutes = minutes * 60 * 1000;
 
-            if (File.Exists(logPath))
-                File.Create(logPath).Close();
+            LogFile.Startfile();
                 
             timer = new Timer(
                 callback: new TimerCallback(WakeOnLan),
@@ -39,22 +37,46 @@ namespace WakeOnLanRepeat
             }
 
             timer.Dispose();
-            stringBuild.Append($"{DateTime.Now:yyyy-MM-d HH:mm:ss}: done.");
-            File.AppendAllText(logPath, stringBuild.ToString());
-            stringBuild.Clear();
+            LogFile.RuningEnd();
         }
 
         private static async void WakeOnLan(object timerState)
         {
             string Mac = ""; //Mac-adress
 
-            stringBuild.Append($"{DateTime.Now:yyyy-MM-d HH:mm:ss}: sending command to server.\n");
+            if (Mac == "")
+                Console.WriteLine("Write you device Mac-address: ");
+
+            LogFile.Append();
 
             var state = timerState as TimerState;
             Interlocked.Increment(ref state.Counter);
 
             EasyWakeOnLanClient WOLClient = new EasyWakeOnLanClient();
             await WOLClient.WakeAsync(Mac);
+        }
+
+        public class LogFile
+        {
+            public static string logPath = "last-run-log.txt";
+                public static void Startfile()
+                {
+                    if (File.Exists(logPath))
+                        File.Create(logPath).Close();
+                }
+
+                public static void Append()
+                {
+                    stringBuild.Append($"{DateTime.Now:yyyy-MM-d HH:mm:ss}: sending command to server.\n");
+                }
+
+                public static void RuningEnd()
+                {
+                    stringBuild.Append($"{DateTime.Now:yyyy-MM-d HH:mm:ss}: done.");
+                    File.AppendAllText(LogFile.logPath, stringBuild.ToString());
+                    stringBuild.Clear();
+                }
+
         }
 
         class TimerState

@@ -8,6 +8,7 @@
 - Easy setup, Wake On Lan tries to send command to youre devices.
 - Send command to start computer or servers in youre network
 - The script can run for every minute, easy to change gap between run.
+- When the script is dont you can find a log file.
 
 ## About 
 
