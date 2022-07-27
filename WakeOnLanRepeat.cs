@@ -1,59 +1,52 @@
-﻿using System;
-using EasyWakeOnLan;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using EasyWakeOnLan;
 using System.Text;
-using System.IO;
 
 namespace WakeOnLanRepeat
 {
     class WakeOnLanRepeat
     {
-        private static Timer timer;
         private static StringBuilder stringBuild = new StringBuilder();
+        private static String Mac = "";
 
         static void Main(string[] args)
         {
-            RepeatEveryMinutes(1);
-            
+            if (Mac != "")
+                RepeatForMinutes(60);
+            else
+                Console.WriteLine("Mac-address is empty.");
         }
 
-        static void RepeatEveryMinutes(int minutes)
+        static void RepeatForMinutes(int minutes = 0)
         {
             var timerState = new TimerState { Counter = 0 };
-            minutes = minutes * 60 * 1000;
+            int delay = minutes * 60 * 1000;
+            delay = delay / 6; 
 
             LogFile.Startfile();
-                
-            timer = new Timer(
-                callback: new TimerCallback(WakeOnLan),
-                state: timerState,
-                dueTime: 1000,
-                period: minutes);
+            var startTime = DateTime.UtcNow;
 
-            while (timerState.Counter < 6)
+            while(DateTime.UtcNow - startTime < TimeSpan.FromMinutes(minutes))
             {
-                Task.Delay(1000).Wait();
+                while (timerState.Counter < 6)
+                {
+                    Interlocked.Increment(ref timerState.Counter);
+                    WakeOnLan();
+                    Task.Delay(delay).Wait();
+                }
             }
 
-            timer.Dispose();
             LogFile.RuningEnd();
         }
 
-        private static async void WakeOnLan(object timerState)
+
+        private static async void WakeOnLan()
         {
-            string Mac = ""; //Mac-adress
-
-            if (Mac == "")
-                Console.WriteLine("Write you device Mac-address: ");
-
-            LogFile.Append();
-
-            var state = timerState as TimerState;
-            Interlocked.Increment(ref state.Counter);
-
-            EasyWakeOnLanClient WOLClient = new EasyWakeOnLanClient();
-            await WOLClient.WakeAsync(Mac);
+            if (Mac == "") 
+                Console.WriteLine("Write you device Mac-address. ");
+            else
+                LogFile.Append();     
+                EasyWakeOnLanClient WOLClient = new EasyWakeOnLanClient();
+                await WOLClient.WakeAsync(Mac);
         }
 
         public class LogFile
@@ -76,12 +69,11 @@ namespace WakeOnLanRepeat
                     File.AppendAllText(LogFile.logPath, stringBuild.ToString());
                     stringBuild.Clear();
                 }
-
         }
 
         class TimerState
         {
-            public int Counter;
+            public int Counter = 0;
         }
 
     }
